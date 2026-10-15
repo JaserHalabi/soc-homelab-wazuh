@@ -23,7 +23,7 @@
 
 | # | Lab Module | MITRE ATT&CK | Focus Area | Status | Date |
 |---|---|---|---|:---:|:---:|
-| 01 | [Network Service Scanning & Detection Gap](./Network-Service-Scanning/) | [T1046](https://attack.mitre.org/techniques/T1046/) | Nmap reconnaissance detection testing & firewall log ingestion gap analysis | Documented | 2026-10-15 |
+| 01 | [Network Service Scanning & Detection Gap](./Network-Service-Scanning/) | [T1046](https://attack.mitre.org/techniques/T1046/) | Nmap reconnaissance detection testing, firewall log gap analysis & remediation | Validated (Rule 92031) | 2026-10-15 |
 
 > *New SOC labs and detection test cases will be analyzed and published as additional attacks and rules are simulated.*
 
