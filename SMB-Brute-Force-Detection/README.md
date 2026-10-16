@@ -134,12 +134,28 @@ Inspected the Windows Security event log on `DESKTOP-G9FMSUV` to verify telemetr
 - **Event ID 4625 (Logon Failure):** Logged for each of the initial 5 invalid attempts between `2:10:32 PM` and `2:10:45 PM`.
 - **Event ID 4740 (User Account Locked Out):** Logged at `2:10:45 PM` as an **Audit Success** event immediately upon crossing the 5-attempt threshold.
 
+### Wazuh SIEM Detection: Account Lockout Alert (Rule 60115)
+In the Wazuh dashboard, the security event stream captured the lockout transition in real time:
+
+![Wazuh Alert 60115 Lockout](wazuh-alert-60115-lockout.png)
+
+| Timestamp | Agent | Rule Description | Level | Rule ID |
+|---|---|---|:---:|:---:|
+| `14:10:33.047` | `Windows10` | `Logon Failure - Unknown user or bad password` | `5` | `60122` |
+| `14:10:45.865` | `Windows10` | `Logon Failure - Unknown user or bad password` | `5` | `60122` |
+| `14:10:45.877` | `Windows10` | `Logon Failure - Unknown user or bad password` | `5` | `60122` |
+| `14:10:45.880` | `Windows10` | `Logon Failure - Unknown user or bad password` | `5` | `60122` |
+| `14:10:45.883` | `Windows10` | `Logon Failure - Unknown user or bad password` | `5` | `60122` |
+| `14:10:45.897` | `Windows10` | **`User account locked out (multiple login errors)`** | **`9`** | **`60115`** |
+
+- **High-Severity Alert:** Wazuh ingested Windows Event ID 4740 and fired **Rule 60115** at **Level 9**, providing SOC analysts with immediate, high-priority visibility into account lockout events triggered by brute-force activity.
+
 ---
 
 ## SOC Takeaways & Defense Summary
 
 1. **Defense-in-Depth:** While Wazuh successfully detects brute-force activity via **Rule 60204 (Level 10)**, detection alone does not stop credential compromise. Coupling SIEM detection with an active **Account Lockout Policy** terminates the attack vector in real-time.
-2. **Audit Telemetry:** The lockout event generates **Event ID 4740**, providing high-confidence incident response evidence of active credential abuse.
+2. **Automated Incident Escalation:** The lockout event generates **Event ID 4740** on the endpoint, which triggers Wazuh **Rule 60115 (Level 9)**, alerting security analysts to targeted account abuse.
 3. **Operational Hardening:** Enforce account lockouts (`net accounts /lockoutthreshold:5`), restrict SMB boundary exposure, and mandate multi-factor authentication across all network logon interfaces.
 
 ---
