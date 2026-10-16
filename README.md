@@ -24,7 +24,7 @@
 | # | Lab Module | MITRE ATT&CK | Focus Area | Status | Date |
 |---|---|---|---|:---:|:---:|
 | 01 | [Network Service Scanning & Detection Gap](./Network-Service-Scanning/) | [T1046](https://attack.mitre.org/techniques/T1046/) | Nmap reconnaissance detection testing, firewall log gap analysis & remediation | Validated (Rule 92031) | 2026-10-15 |
-| 02 | [SMB Brute Force & Credential Access](./SMB-Brute-Force-Detection/) | [T1110](https://attack.mitre.org/techniques/T1110/) | NetExec dictionary attack, Event ID 4625/4624 telemetry, and Wazuh correlation | Validated (Rule 60204) | 2026-10-16 |
+| 02 | [SMB Brute Force & Credential Access](./SMB-Brute-Force-Detection/) | [T1110](https://attack.mitre.org/techniques/T1110/) | NetExec dictionary attack, Event ID 4625/4624/4740 telemetry, Wazuh correlation & Account Lockout fix | Validated & Mitigated | 2026-10-16 |
 
 > *New SOC labs and detection test cases will be analyzed and published as additional attacks and rules are simulated.*
 

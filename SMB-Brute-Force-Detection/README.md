@@ -87,12 +87,60 @@ In the Wazuh dashboard under **Security Events**, the attack generated high-fide
 
 ---
 
-## SOC Takeaways & Defensive Recommendations
+## Phase 5: Defensive Remediation — Account Lockout Policy (The Fix)
 
-1. **Detection Effectiveness:** Unlike unauthenticated port scanning (which required explicit firewall logging), Windows generates built-in **Event ID 4625** for all failed authentication attempts. Wazuh's default Windows ruleset successfully ingested, parsed, and correlated these events to fire high-severity **Level 10** alerts (`Rule 60204`).
-2. **Account Lockout Policy:** Deploy an account lockout threshold (e.g., lock account after 5 failed attempts within a 15-minute window) via Local Security Policy or Group Policy (`net accounts /lockoutthreshold:5`) to mitigate online dictionary attacks.
-3. **Network Boundary Defenses:** Restrict SMB (TCP 445) exposure to required administrative subnets or bastion hosts using Windows Defender Firewall rules.
-4. **Strong Password Complexity:** Enforce passphrases that resist common dictionary attacks (`rockyou.txt`).
+### The Vulnerability
+During the initial attack, the target Windows system permitted unlimited consecutive failed logon attempts, enabling the adversary to exhaust dictionary candidates until successfully recovering `Password1`.
+
+### Implementing the Lockout Policy
+To stop brute-force and password-spraying attacks, configured an Account Lockout Policy on the Windows 10 target via the administrative command prompt:
+
+```cmd
+net accounts /lockoutduration:15 /lockoutwindow:15
+net accounts /lockoutthreshold:5
+```
+
+![Net Accounts Lockout Config](net-accounts-lockout-config.png)
+
+- **Lockout Threshold:** 5 invalid logon attempts triggers an immediate account lockout.
+- **Lockout Duration:** 15 minutes before the account unlocks automatically.
+- **Lockout Observation Window:** 15 minutes between failed attempt counter resets.
+
+---
+
+## Phase 6: Adversary Re-Test & Security Telemetry
+
+### Attack Mitigation Proof (NetExec)
+Re-executed the exact same dictionary attack from Kali Linux:
+
+```bash
+netexec smb 192.168.150.132 -u labuser -p /usr/share/wordlists/rockyou.txt --ignore-pw-decoding
+```
+
+![NetExec Account Locked Out](netexec-account-locked-out.png)
+
+- Attempts 1–5 (`123456`, `12345`, `123456789`, `password`, `iloveyou`) failed with `STATUS_LOGON_FAILURE`.
+- Upon the 6th attempt (`princess`), Windows enforced the threshold and denied access with:
+  ```text
+  [-] DESKTOP-G9FMSUV\labuser:princess STATUS_ACCOUNT_LOCKED_OUT
+  ```
+- All subsequent dictionary candidates were rejected immediately with `STATUS_ACCOUNT_LOCKED_OUT`, successfully neutralizing the attack before valid credentials could be discovered.
+
+### Security Log Telemetry (Event ID 4740)
+Inspected the Windows Security event log on `DESKTOP-G9FMSUV` to verify telemetry generation:
+
+![Event Viewer 4740 Lockout](event-viewer-4740-lockout.png)
+
+- **Event ID 4625 (Logon Failure):** Logged for each of the initial 5 invalid attempts between `2:10:32 PM` and `2:10:45 PM`.
+- **Event ID 4740 (User Account Locked Out):** Logged at `2:10:45 PM` as an **Audit Success** event immediately upon crossing the 5-attempt threshold.
+
+---
+
+## SOC Takeaways & Defense Summary
+
+1. **Defense-in-Depth:** While Wazuh successfully detects brute-force activity via **Rule 60204 (Level 10)**, detection alone does not stop credential compromise. Coupling SIEM detection with an active **Account Lockout Policy** terminates the attack vector in real-time.
+2. **Audit Telemetry:** The lockout event generates **Event ID 4740**, providing high-confidence incident response evidence of active credential abuse.
+3. **Operational Hardening:** Enforce account lockouts (`net accounts /lockoutthreshold:5`), restrict SMB boundary exposure, and mandate multi-factor authentication across all network logon interfaces.
 
 ---
 
